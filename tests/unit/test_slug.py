@@ -1,5 +1,7 @@
+from conduit.core.utils import slug as slug_module
 from conduit.core.utils.slug import (
     get_slug_unique_part,
+    make_slug_from_title,
     make_slug_from_title_and_code,
 )
 
@@ -26,3 +28,7 @@ def test_unique_part_is_the_last_segment():
 
 def test_title_without_letters_does_not_start_with_a_dash():
     assert make_slug_from_title_and_code("!!!!!", "abc123") == "abc123"
+
+def test_new_article_title_without_letters_does_not_start_with_a_dash(monkeypatch):
+    monkeypatch.setattr(slug_module, "token_urlsafe", lambda nbytes: "AbC123")
+    assert make_slug_from_title("!!!!!") == "abc123"
