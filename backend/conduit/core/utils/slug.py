@@ -13,6 +13,8 @@ def make_slug_from_title(title: str) -> str:
     """
     slug = slugify(text=title, max_length=32, lowercase=True)
     unique_code = token_urlsafe(6)
+    if not slug:
+        return unique_code.lower()
     return f"{slug}-{unique_code.lower()}"
 
 
