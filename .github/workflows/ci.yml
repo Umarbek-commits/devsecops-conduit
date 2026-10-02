@@ -23,3 +23,43 @@ jobs:
         with:
           fetch-depth: 0
       - run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --log-opts=HEAD --no-banner -v
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: conduit
+          POSTGRES_PASSWORD: conduit-ci-only
+          POSTGRES_DB: conduit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U conduit -d conduit"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      APP_ENV: prod
+      SECRET_KEY: ci-only-not-a-secret
+      JWT_SECRET_KEY: ci-only-jwt-not-a-secret
+      POSTGRES_USER: conduit
+      POSTGRES_PASSWORD: conduit-ci-only
+      POSTGRES_DB: conduit
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: 5432
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install -r backend/requirements.txt -r requirements-tests.txt
+      - run: python -m alembic -c alembic.ini upgrade head
+        working-directory: backend
+      - run: uvicorn conduit.app:app --host 127.0.0.1 --port 8000 > api.log 2>&1 &
+        working-directory: backend
+      - run: timeout 30 bash -c 'until curl -fs http://127.0.0.1:8000/api/health-check; do sleep 1; done'
+      - run: python -m pytest tests/integration -v
+      - if: failure()
+        run: cat backend/api.log
