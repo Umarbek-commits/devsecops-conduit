@@ -28,7 +28,10 @@ export default ({
           );
         })
       ) : (
-        <div className="my-10">No articles</div>
+        <div className="article-list-empty" role="status">
+          <h2>No articles yet</h2>
+          <p>Try another topic or check back later.</p>
+        </div>
       )}
 
       <Pagination page={page} size={size} total={total} />

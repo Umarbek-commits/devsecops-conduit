@@ -41,8 +41,10 @@ export default function Home() {
     <div className="home-page">
       <div className="banner">
         <div className="container">
-          <h1 className="logo-font">conduit</h1>
-          <p>Build your knowledge, one article at a time!</p>
+          <span className="hero-brand">conduit</span>
+          <p className="eyebrow">A community for curious minds</p>
+          <h1>Ideas worth sharing.</h1>
+          <p>Read thoughtful stories, learn from others, and share what you know.</p>
         </div>
       </div>
 
@@ -62,7 +64,7 @@ export default function Home() {
                 {(tags) => {
                   return (
                     <div className="sidebar">
-                      <p>Popular Tags</p>
+                      <p>Explore topics</p>
                       <Tags link={pathname === "/"} tags={tags} />
                     </div>
                   );

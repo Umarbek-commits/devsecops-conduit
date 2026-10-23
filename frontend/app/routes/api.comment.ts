@@ -44,6 +44,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
 
     return {
       errors: [],
+      success: "comment-added",
       formState: null,
       fieldErrors: []
     };

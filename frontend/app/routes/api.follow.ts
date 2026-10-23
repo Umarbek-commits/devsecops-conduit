@@ -30,7 +30,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
 
     if (result.error) return { errors: getApiErrorMessages(result.error) };
 
-    return { errors: [] };
+    return { errors: [], success: action };
   } catch (error) {
     return { errors: getApiErrorMessages(error) };
   }

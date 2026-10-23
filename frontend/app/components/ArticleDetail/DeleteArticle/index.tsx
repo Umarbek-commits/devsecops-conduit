@@ -9,6 +9,8 @@ export const DeleteArticle = () => {
     <>
       <fetcher.Form method="post" className="inline" ref={formRef}>
         <button
+          type="button"
+          aria-busy={isLoading}
           className="btn btn-sm btn-outline-danger"
           onClick={(e) => {
             e.stopPropagation();

@@ -89,26 +89,28 @@ app/
 
 ## Prerequisites
 
-- Node.js 18+ (the Dockerfile targets Node 20 Alpine)
+- Node.js 22 (the Dockerfile targets Node 22)
 - npm 9+ (lockfile committed as `package-lock.json`; pnpm/yarn will work but are not configured in CI)
 
 ## Installation
 
 ```sh
-npm install
+npm ci
 ```
 
 ## Environment Variables
 
-Create a `.env` file in the frontend project directory using `.env.example` as a template:
+Create a local `.env` file in the frontend project directory using `.env.example` as a template. Generate a separate local key with `openssl rand -hex 32`, then put its output in `SESSION_SECRET` in that ignored `.env` file. Do not use a production key for local development.
 
 ```env
-SESSION_SECRET=replace-with-long-random-string
+SESSION_SECRET=
 REACT_PUBLIC_API_ENDPOINT=http://127.0.0.1:8000/api
 ```
 
-- `SESSION_SECRET` powers the secure HTTP-only cookie in `app/session.server.ts`.
+- `SESSION_SECRET` signs the HTTP-only session cookie. It must be non-empty; the server refuses to start if it is missing or blank.
 - `REACT_PUBLIC_API_ENDPOINT` configures the OpenAPI client (`app/libs/api`). It may be the backend origin or an origin ending in `/api`; the client adds `/api` when needed and avoids duplicating it.
+
+Replace the blank `SESSION_SECRET` only in your ignored local `.env` with the output of `openssl rand -hex 32`. The blank value in `.env.example` is intentional and is not a usable key.
 
 Restart the dev server whenever these values change.
 
@@ -121,6 +123,7 @@ Restart the dev server whenever these values change.
 | `npm run start` | Serve the production build via `react-router-serve` (defaults to port 3000, respects `PORT`). |
 | `npm run typecheck` | Generate loader/action types (`react-router typegen`) and run `tsc --noEmit`. |
 | `npm run openapi` | Regenerate `app/consts/schema.d.ts` from `openapi/schema.yml`. Run this after editing the schema. |
+| `npm run test:session` | Verify missing session keys are rejected and reproduce the empty-key signing failure. |
 
 ## Development
 
@@ -143,8 +146,7 @@ npm run start
 
 ```
 docker build -t realworld-remix .
-docker run --rm -p 3000:3000 \
-  -e SESSION_SECRET=replace-me \
+docker run --rm -p 3000:3000 --env-file .env \
   -e REACT_PUBLIC_API_ENDPOINT=https://api.realworld.show/api \
   realworld-remix
 ```
@@ -164,7 +166,7 @@ The multi-stage Dockerfile installs dependencies and builds with Node 22. It use
 
 - Missing types after modifying routes? Run `npm run typecheck` to refresh `react-router` typegen output.
 - API requests failing locally? Double-check `REACT_PUBLIC_API_ENDPOINT` and ensure CORS allows your dev origin.
-- Session errors in development? Provide a long, random `SESSION_SECRET`; short strings will cause cookie signing failures. The session cookie is Secure in production and usable over local HTTP in development.
+- `Zero-length key is not supported` or a session configuration error? Generate a new local key with `openssl rand -hex 32`, set it in the ignored `frontend/.env`, and restart the server. The server does not substitute a default key. The session cookie is Secure in production and usable over local HTTP in development.
 
 # License
 

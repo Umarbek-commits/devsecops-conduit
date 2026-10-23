@@ -97,7 +97,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <Nav />
-        {children}
+        <div className="site-content">{children}</div>
         <Footer />
 
         <ScrollRestoration />

@@ -1,6 +1,7 @@
 import { createCookieSessionStorage, type ActionFunctionArgs } from "react-router";
 import { COOKIE_KEY } from "./consts";
 import { createApiClient } from "./libs/api";
+import { getSessionSecret } from "./libs/session-secret";
 
 type SessionData = {
   token: string;
@@ -10,24 +11,54 @@ type SessionFlashData = {
   error: string;
 };
 
-const { getSession, commitSession, destroySession } =
-  createCookieSessionStorage<SessionData, SessionFlashData>(
-    {
-      // a Cookie from `createCookie` or the CookieOptions to create one
-      cookie: {
-        name: COOKIE_KEY,
-        // expires: new Date(Date.now() + 60_000),
-        httpOnly: true,
-        maxAge: 60 * 60 * 1000,
-        path: "/",
-        sameSite: "lax",
-        secrets: [process.env.SESSION_SECRET!],
-        secure: process.env.NODE_ENV !== "development",
-      },
-    },
-  );
+const configuredSecret = process.env.SESSION_SECRET?.trim();
+const sessionStorage = createCookieSessionStorage<
+  SessionData,
+  SessionFlashData
+>({
+  // Build prerender can import routes without runtime secrets. Requests that
+  // read a signed cookie and all operations that write cookies validate first.
+  cookie: {
+    name: COOKIE_KEY,
+    httpOnly: true,
+    maxAge: 60 * 60 * 1000,
+    path: "/",
+    sameSite: "lax",
+    secrets: configuredSecret ? [configuredSecret] : [],
+    secure: process.env.NODE_ENV !== "development",
+  },
+});
 
-export { getSession, commitSession, destroySession };
+function hasSessionCookie(cookieHeader: string | null | undefined): boolean {
+  return Boolean(
+    cookieHeader
+      ?.split(";")
+      .some((cookie) => cookie.trim().startsWith(`${COOKIE_KEY}=`)),
+  );
+}
+
+export function getSession(
+  ...args: Parameters<typeof sessionStorage.getSession>
+) {
+  if (hasSessionCookie(args[0])) {
+    getSessionSecret(process.env.SESSION_SECRET);
+  }
+  return sessionStorage.getSession(...args);
+}
+
+export function commitSession(
+  ...args: Parameters<typeof sessionStorage.commitSession>
+) {
+  getSessionSecret(process.env.SESSION_SECRET);
+  return sessionStorage.commitSession(...args);
+}
+
+export function destroySession(
+  ...args: Parameters<typeof sessionStorage.destroySession>
+) {
+  getSessionSecret(process.env.SESSION_SECRET);
+  return sessionStorage.destroySession(...args);
+}
 
 
 

@@ -12,7 +12,11 @@ export default ({
   const currentUser = useUser();
 
   if (!comments?.length) {
-    return null;
+    return (
+      <p className="comment-empty" role="status">
+        No comments yet. Start the conversation.
+      </p>
+    );
   }
 
   return (
@@ -31,6 +35,7 @@ export default ({
                 <Avatar
                   src={comment.author.image}
                   className="comment-author-img"
+                  alt=""
                 />
               </a>
               &nbsp;
@@ -40,9 +45,9 @@ export default ({
               >
                 {comment.author.username}
               </a>
-              <span className="date-posted">
+              <time className="date-posted" dateTime={comment.createdAt}>
                 {dayjs(comment.createdAt).format("MMM D, YYYY")}
-              </span>
+              </time>
               {currentUser?.username === comment.author.username ? (
                 <DeleteComment id={comment.id} />
               ) : null}
