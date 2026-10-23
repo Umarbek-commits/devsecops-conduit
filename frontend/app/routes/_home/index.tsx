@@ -3,13 +3,15 @@ import { Suspense } from "react";
 
 import { useUser } from "~/hooks/useUser";
 import { Tabs } from "~/components/Tabs";
-import fetchClient from "~/libs/api";
+import { apiClientContext } from "~/context/apiClient";
 import Tags from "~/components/Tags";
 import type { Route } from "./+types";
 import TagLoading from "./TagLoading";
+import { throwApiError } from "~/libs/api/errors";
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const res = await fetchClient.GET("/tags");
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const res = await context.get(apiClientContext).GET("/tags");
+  if (res.error) throwApiError(res.error);
 
   return {
     tags: res.data?.tags || [],

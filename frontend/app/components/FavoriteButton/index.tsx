@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import { useFetcher } from "~/hooks/useFetcher";
+import { ErrorMessage } from "~/components/ErrorMessage";
 
 export const FavoriteButton = ({
   count = 0,
@@ -14,27 +15,30 @@ export const FavoriteButton = ({
   favorite?: boolean;
   className?: string;
 }) => {
-  const { fetcher, isLoading } = useFetcher();
+  const { fetcher, isLoading, errors } = useFetcher();
   return (
-    <fetcher.Form
-      className={clsx("inline", className)}
-      method="post"
-      action="/api/favorites"
-    >
-      <input type="hidden" value={slug} name="slug" />
-      <input
-        type="hidden"
-        value={favorite ? "unfavorite" : "favorite"}
-        name="action"
-      />
-      <button
-        disabled={isLoading}
-        type="submit"
-        className="btn btn-sm btn-outline-primary action-btn"
+    <>
+      <fetcher.Form
+        className={clsx("inline", className)}
+        method="post"
+        action="/api/favorites"
       >
-        <i className={clsx("ion-heart")}></i> {text}{" "}
-        <span className="counter">{count || 0}</span>
-      </button>
-    </fetcher.Form>
+        <input type="hidden" value={slug} name="slug" />
+        <input
+          type="hidden"
+          value={favorite ? "unfavorite" : "favorite"}
+          name="action"
+        />
+        <button
+          disabled={isLoading}
+          type="submit"
+          className="btn btn-sm btn-outline-primary action-btn"
+        >
+          <i className={clsx("ion-heart")}></i> {text}{" "}
+          <span className="counter">{count || 0}</span>
+        </button>
+      </fetcher.Form>
+      <ErrorMessage errors={errors} />
+    </>
   );
 };

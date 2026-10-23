@@ -114,6 +114,38 @@ async def test_user_can_retrieve_article_if_exists(
 
 
 @pytest.mark.anyio
+async def test_user_can_replace_and_clear_article_tags(
+    authorized_test_client: AsyncClient, test_article: ArticleDTO
+) -> None:
+    response = await authorized_test_client.put(
+        url=f"/articles/{test_article.slug}",
+        json={"article": {"tagList": ["replacement", "second-tag"]}},
+    )
+    assert response.status_code == 200
+    assert set(response.json()["article"]["tagList"]) == {
+        "replacement",
+        "second-tag",
+    }
+
+    response = await authorized_test_client.put(
+        url=f"/articles/{test_article.slug}",
+        json={"article": {"body": "updated body while preserving the tags"}},
+    )
+    assert response.status_code == 200
+    assert set(response.json()["article"]["tagList"]) == {
+        "replacement",
+        "second-tag",
+    }
+
+    response = await authorized_test_client.put(
+        url=f"/articles/{test_article.slug}",
+        json={"article": {"tagList": []}},
+    )
+    assert response.status_code == 200
+    assert response.json()["article"]["tagList"] == []
+
+
+@pytest.mark.anyio
 async def test_user_can_not_delete_foreign_article(
     authorized_test_client: AsyncClient,
     session: AsyncSession,

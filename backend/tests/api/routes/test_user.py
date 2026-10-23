@@ -69,6 +69,18 @@ async def test_user_can_update_own_profile(
 
 
 @pytest.mark.anyio
+async def test_user_can_clear_bio_and_image(
+    authorized_test_client: AsyncClient,
+) -> None:
+    response = await authorized_test_client.put(
+        url="/user", json={"user": {"bio": "", "image": ""}}
+    )
+    assert response.status_code == 200
+    assert response.json()["user"]["bio"] == ""
+    assert response.json()["user"]["image"] == ""
+
+
+@pytest.mark.anyio
 async def test_user_can_change_password(
     authorized_test_client: AsyncClient,
     test_user: UserDTO,

@@ -1,5 +1,7 @@
 FROM node:22-slim AS build
 WORKDIR /app
+ARG REACT_PUBLIC_API_ENDPOINT=http://127.0.0.1:8000/api
+ENV REACT_PUBLIC_API_ENDPOINT=${REACT_PUBLIC_API_ENDPOINT}
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .

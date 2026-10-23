@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { DeleteArticle } from "../DeleteArticle";
 import { FollowButton } from "~/components/FollowButton";
 import { FavoriteButton } from "~/components/FavoriteButton";
@@ -26,7 +27,9 @@ export default function ArticleMeta({
         <a href={`/profile/${author?.username}`} className="author">
           {author?.username}
         </a>
-        <span className="date">January 20th</span>
+        <span className="date">
+          {article?.createdAt ? dayjs(article.createdAt).format("MMMM D, YYYY") : ""}
+        </span>
       </div>
       {!isAuthor ? <FollowButton profile={author!} /> : null}
       &nbsp;&nbsp;

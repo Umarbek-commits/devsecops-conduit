@@ -1,17 +1,18 @@
-import fetchClient from "~/libs/api";
 import { redirect, useLoaderData, useParams } from "react-router";
 import { ErrorMessage } from "../../components/ErrorMessage";
 import { useFetcher } from "~/hooks/useFetcher";
 import type { components } from "~/consts/schema";
 import type { Route } from "../+types/article.$slug";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { inputsSchema } from "~/libs/schemas/newArticle";
 import { omitBy } from "lodash-es";
 import { authMiddleware } from "~/middlewares/auth";
+import { apiClientContext } from "~/context/apiClient";
+import { getApiErrorMessages, throwApiError } from "~/libs/api/errors";
 
 export const middleware: Route.MiddlewareFunction[] = [authMiddleware as unknown as Route.MiddlewareFunction];
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, context }: Route.LoaderArgs) {
   const slug = params.slug;
 
   if (!slug) {
@@ -20,19 +21,21 @@ export async function loader({ params }: Route.LoaderArgs) {
     };
   }
 
-  const userRes = await fetchClient.GET("/user");
+  const apiClient = context.get(apiClientContext);
+  const userRes = await apiClient.GET("/user");
   const currentUser = userRes.data?.user;
   if (!currentUser) {
     throw redirect("/login");
   }
 
-  const res = await fetchClient.GET("/articles/{slug}", {
+  const res = await apiClient.GET("/articles/{slug}", {
     params: {
       path: {
         slug,
       },
     },
   });
+  if (res.error) throwApiError(res.error);
 
   const article = res.data?.article;
 
@@ -48,7 +51,7 @@ export async function loader({ params }: Route.LoaderArgs) {
   };
 }
 
-export async function action({ request, params }: Route.ActionArgs) {
+export async function action({ request, params, context }: Route.ActionArgs) {
   let formData = await request.formData();
   const slug = params.slug;
   const data = Object.fromEntries(formData);
@@ -62,7 +65,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     omitBy(
       {
         ...updateData,
-        tagList: tagList?.split(",").filter(Boolean) || "",
+        tagList: tagList?.split(",").map((tag) => tag.trim()).filter(Boolean) ?? [],
       },
       (value) => {
         if (!value) {
@@ -87,27 +90,34 @@ export async function action({ request, params }: Route.ActionArgs) {
     },
   };
 
-  const res = await(
-    slug
-      ? fetchClient.PUT("/articles/{slug}", {
-          ...fetchParams,
-          params: {
-            path: {
-              slug,
+  try {
+    const res = await(
+      slug
+        ? context.get(apiClientContext).PUT("/articles/{slug}", {
+            ...fetchParams,
+            params: {
+              path: {
+                slug,
+              },
             },
-          },
-        })
-      : fetchClient.POST("/articles", fetchParams)
-  );
+          })
+        : context.get(apiClientContext).POST("/articles", fetchParams)
+    );
 
-  if (res.error) {
+    if (res.error) {
+      return {
+        errors: getApiErrorMessages(res.error),
+        formState: updateData,
+      };
+    }
+
+    return redirect(`/article/${res.data?.article.slug}`);
+  } catch (error) {
     return {
-      errors: res.error.errors.body,
+      errors: getApiErrorMessages(error),
       formState: updateData,
     };
   }
-
-  return redirect(`/article/${res.data?.article.slug}`);
 }
 
 export default () => {
@@ -119,7 +129,11 @@ export default () => {
 
   const tagInputRef = useRef<HTMLInputElement>(null);
   const tagListRef = useRef<HTMLInputElement>(null);
-  const [tagList, setTagList] = useState<string[]>([]);
+  const [tagList, setTagList] = useState<string[]>(article?.tagList ?? []);
+
+  useEffect(() => {
+    setTagList(article?.tagList ?? []);
+  }, [article?.slug]);
 
   return (
     <div className="editor-page">
@@ -163,62 +177,51 @@ export default () => {
                 </fieldset>
                 <ErrorMessage errors={fieldErrors?.body} />
 
-                {!slug ? (
-                  <fieldset className="form-group">
-                    <input
-                      ref={tagInputRef}
-                      type="text"
-                      className="form-control"
-                      placeholder="Enter tags"
-                      onKeyDown={(e) => {
-                        e.stopPropagation();
+                <fieldset className="form-group">
+                  <input
+                    ref={tagInputRef}
+                    type="text"
+                    className="form-control"
+                    placeholder="Enter tags"
+                    onKeyDown={(e) => {
+                      e.stopPropagation();
 
-                        if (e.key === "Enter") {
-                          const newTagList = tagList.slice();
-                          const value = e.currentTarget.value.trim();
+                      if (e.key === "Enter") {
+                        const newTagList = tagList.slice();
+                        const value = e.currentTarget.value.trim();
 
-                          if (value && !newTagList.includes(value)) {
-                            newTagList.push(value);
-                            e.currentTarget.value = "";
-                            setTagList(newTagList);
-                          }
-                          e.preventDefault();
+                        if (value && !newTagList.includes(value)) {
+                          newTagList.push(value);
+                          e.currentTarget.value = "";
+                          setTagList(newTagList);
                         }
-                      }}
-                    />
-                    <input
-                      ref={tagListRef}
-                      type="hidden"
-                      name="tagList"
-                      value={
-                        tagList.length
-                          ? tagList.join(",")
-                          : formState?.tagList?.join(",")
+                        e.preventDefault();
                       }
-                    />
+                    }}
+                  />
+                  <input
+                    ref={tagListRef}
+                    type="hidden"
+                    name="tagList"
+                    value={tagList.join(",")}
+                    readOnly
+                  />
+                  <div className="tag-list">
                     <div className="tag-list">
-                      <div className="tag-list">
-                        {(tagList || []).map((tag) => {
-                          return (
-                            <span key={tag} className="tag-default tag-pill">
-                              <i
-                                className="ion-close-round"
-                                onClick={() => {
-                                  setTagList((list) => {
-                                    return list.filter(
-                                      (value) => value !== tag
-                                    );
-                                  });
-                                }}
-                              ></i>
-                              {tag}
-                            </span>
-                          );
-                        })}
-                      </div>
+                      {tagList.map((tag) => (
+                        <span key={tag} className="tag-default tag-pill">
+                          <i
+                            className="ion-close-round"
+                            onClick={() => {
+                              setTagList((list) => list.filter((value) => value !== tag));
+                            }}
+                          ></i>
+                          {tag}
+                        </span>
+                      ))}
                     </div>
-                  </fieldset>
-                ) : null}
+                  </div>
+                </fieldset>
                 <button
                   type="submit"
                   className="btn btn-lg pull-xs-right btn-primary"

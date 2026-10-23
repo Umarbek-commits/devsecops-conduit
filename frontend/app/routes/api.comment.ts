@@ -1,9 +1,10 @@
 import { redirect, type ActionFunctionArgs } from "react-router";
-import fetchClient from "~/libs/api";
 import { inputsSchema } from "~/libs/schemas/comment";
 import { checkIsLogin } from "~/session.server";
+import { apiClientContext } from "~/context/apiClient";
+import { getApiErrorMessages } from "~/libs/api/errors";
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
   if (!(await checkIsLogin(request))) {
     return redirect("/login");
   }
@@ -22,29 +23,36 @@ export async function action({ request }: ActionFunctionArgs) {
     };
   }
 
-  const res = await fetchClient.POST("/articles/{slug}/comments", {
-    params: {
-      path: {
-        slug,
+  try {
+    const res = await context.get(apiClientContext).POST("/articles/{slug}/comments", {
+      params: {
+        path: {
+          slug,
+        },
       },
-    },
-    body: {
-      comment: result.data,
-    },
-  });
+      body: {
+        comment: result.data,
+      },
+    });
 
-  if (res.error) {
+    if (res.error) {
+      return {
+        errors: getApiErrorMessages(res.error),
+        formState: updateData,
+      };
+    }
+
     return {
-      errors: res.error.errors.body,
+      errors: [],
+      formState: null,
+      fieldErrors: []
+    };
+  } catch (error) {
+    return {
+      errors: getApiErrorMessages(error),
       formState: updateData,
     };
   }
-
-  return {
-    errors: [],
-    formState: null,
-    fieldErrors: []
-  };
 }
 
 export { loader } from "~/libs/actions";

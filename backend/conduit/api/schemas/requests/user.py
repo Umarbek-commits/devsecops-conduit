@@ -23,9 +23,9 @@ class UserUpdateData(BaseModel):
     bio: str | None = Field(None)
     image: str | None = Field(None)
 
-    @field_validator("*", mode="before")
+    @field_validator("email", "password", "username", mode="before")
     @classmethod
-    def empty_as_none(cls, v: Any) -> Any:
+    def empty_optional_credentials_as_none(cls, v: Any) -> Any:
         return v or None if isinstance(v, (str,)) else v
 
 

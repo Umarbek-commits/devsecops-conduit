@@ -51,18 +51,12 @@ class ArticleRepository(IArticleRepository):
     async def get_by_slug_or_none(
         self, session: AsyncSession, slug: str
     ) -> ArticleRecordDTO | None:
-        slug_unique_part = get_slug_unique_part(slug=slug)
-        query = select(Article).where(
-            Article.slug == slug or Article.slug.contains(slug_unique_part)
-        )
+        query = select(Article).where(Article.slug == slug)
         if article := await session.scalar(query):
             return self._to_article_record_dto(article)
 
     async def get_by_slug(self, session: AsyncSession, slug: str) -> ArticleRecordDTO:
-        slug_unique_part = get_slug_unique_part(slug=slug)
-        query = select(Article).where(
-            Article.slug == slug or Article.slug.contains(slug_unique_part)
-        )
+        query = select(Article).where(Article.slug == slug)
         if not (article := await session.scalar(query)):
             raise ArticleNotFoundException()
         return self._to_article_record_dto(article)
@@ -152,7 +146,7 @@ class ArticleRepository(IArticleRepository):
                 User.image,
             )
         )
-        query = query.limit(limit).offset(offset)
+        query = query.order_by(Article.created_at.desc()).limit(limit).offset(offset)
         articles = await session.execute(query)
 
         return [self._to_article_feed_record_dto(article) for article in articles]
@@ -235,7 +229,7 @@ class ArticleRepository(IArticleRepository):
             )
             query = query.where(FavoriteAlias.user_id == favorited_user_id)
 
-        query = query.limit(limit).offset(offset)
+        query = query.order_by(Article.created_at.desc()).limit(limit).offset(offset)
         articles = await session.execute(query)
         return [self._to_article_feed_record_dto(article) for article in articles]
 

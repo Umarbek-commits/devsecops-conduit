@@ -1,12 +1,13 @@
 import clsx from "clsx";
 import { Link, useLocation } from "react-router";
+import { buildPaginationHref } from "~/libs/pagination";
 
 export const Pagination = (props: {
   page: number;
   size: number;
   total: number;
 }) => {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const { page, size, total } = props;
   const totalPages = Math.ceil(total / size);
   if (total === 0 || totalPages <= 1) {
@@ -26,8 +27,7 @@ export const Pagination = (props: {
           >
             <Link
               className="page-link"
-              to={`${pathname}${pathname.includes("?") ? "%" : "?"
-                }page=${currentPage}`}
+              to={buildPaginationHref(pathname, search, currentPage)}
             >
               {currentPage}
             </Link>

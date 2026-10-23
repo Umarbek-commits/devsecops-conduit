@@ -100,15 +100,15 @@ npm install
 
 ## Environment Variables
 
-Create a `.env` file in the project root with the required secrets (no template file is committed):
+Create a `.env` file in the frontend project directory using `.env.example` as a template:
 
 ```env
 SESSION_SECRET=replace-with-long-random-string
-NEXT_PUBLIC_API_ENDPOINT=https://api.realworld.show/api
+REACT_PUBLIC_API_ENDPOINT=http://127.0.0.1:8000/api
 ```
 
 - `SESSION_SECRET` powers the secure HTTP-only cookie in `app/session.server.ts`.
-- `NEXT_PUBLIC_API_ENDPOINT` configures the OpenAPI client (`app/libs/api`); defaults to the public RealWorld API but can be pointed to any compatible backend.
+- `REACT_PUBLIC_API_ENDPOINT` configures the OpenAPI client (`app/libs/api`). It may be the backend origin or an origin ending in `/api`; the client adds `/api` when needed and avoids duplicating it.
 
 Restart the dev server whenever these values change.
 
@@ -128,7 +128,7 @@ Restart the dev server whenever these values change.
 npm run dev
 ```
 
-Open the logged local URL (usually http://localhost:5173). API requests proxy directly to `NEXT_PUBLIC_API_ENDPOINT`, so ensure CORS is properly configured if you switch to a self-hosted backend.
+Open the logged local URL (usually http://localhost:5173). API requests go directly to `REACT_PUBLIC_API_ENDPOINT`, so ensure CORS is properly configured if you switch to a self-hosted backend.
 
 ## Build & Preview
 
@@ -145,11 +145,11 @@ npm run start
 docker build -t realworld-remix .
 docker run --rm -p 3000:3000 \
   -e SESSION_SECRET=replace-me \
-  -e NEXT_PUBLIC_API_ENDPOINT=https://api.realworld.show/api \
+  -e REACT_PUBLIC_API_ENDPOINT=https://api.realworld.show/api \
   realworld-remix
 ```
 
-The multi-stage Dockerfile installs dependencies, builds the project, and runs `npm run start` inside Node 20 Alpine. Provide your secrets at runtime (do not bake them into the image).
+The multi-stage Dockerfile installs dependencies and builds with Node 22. It uses a local API URL only while prerendering static auth pages; configure `REACT_PUBLIC_API_ENDPOINT` for the running container as shown above. Provide secrets at runtime (do not bake them into the image).
 
 # Tech Stack
 
@@ -163,8 +163,8 @@ The multi-stage Dockerfile installs dependencies, builds the project, and runs `
 # Troubleshooting
 
 - Missing types after modifying routes? Run `npm run typecheck` to refresh `react-router` typegen output.
-- API requests failing locally? Double-check `NEXT_PUBLIC_API_ENDPOINT` and ensure CORS allows your dev origin.
-- Session errors in development? Provide a long, random `SESSION_SECRET`; short strings will cause cookie signing failures.
+- API requests failing locally? Double-check `REACT_PUBLIC_API_ENDPOINT` and ensure CORS allows your dev origin.
+- Session errors in development? Provide a long, random `SESSION_SECRET`; short strings will cause cookie signing failures. The session cookie is Secure in production and usable over local HTTP in development.
 
 # License
 
