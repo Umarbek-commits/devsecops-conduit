@@ -45,7 +45,7 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/NewUserRequest'
       responses:
-        '201':
+        '200':
           $ref: '#/components/responses/UserResponse'
         '422':
           $ref: '#/components/responses/GenericError'
@@ -212,7 +212,7 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/NewArticleRequest'
       responses:
-        '201':
+        '200':
           $ref: '#/components/responses/SingleArticleResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
@@ -558,6 +558,10 @@ components:
           type: string
         body:
           type: string
+        tagList:
+          type: array
+          items:
+            type: string
     Comment:
       required:
         - author
@@ -588,18 +592,33 @@ components:
           type: string
     GenericErrorModel:
       required:
-        - errors
+        - status
+        - status_code
+        - type
+        - message
       type: object
       properties:
+        status:
+          type: string
+          example: error
+        status_code:
+          type: integer
+        type:
+          type: string
+        message:
+          type: string
         errors:
-          required:
-            - body
           type: object
-          properties:
-            body:
-              type: array
-              items:
-                type: string
+          additionalProperties:
+            oneOf:
+              - type: array
+                items:
+                  type: string
+              - type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
   responses:
     TagsResponse:
       description: Tags

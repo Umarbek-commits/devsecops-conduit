@@ -44,4 +44,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -f http://127.0.0.1:${UVICORN_PORT}/api/health-check || exit 1
 
 ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
-CMD ["uvicorn", "conduit.app:app"]
+CMD ["sh", "-c", "exec uvicorn conduit.app:app --host \"$UVICORN_HOST\" --port \"$UVICORN_PORT\""]

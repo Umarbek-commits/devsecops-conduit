@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -54,6 +54,11 @@ class ArticleTagRepository(IArticleTagRepository):
         )
         tags = await session.scalars(query)
         return [self._to_tag_record_dto(tag) for tag in tags]
+
+    async def delete_all(self, session: AsyncSession, article_id: int) -> None:
+        await session.execute(
+            delete(ArticleTag).where(ArticleTag.article_id == article_id)
+        )
 
     @staticmethod
     def _to_tag_record_dto(model: Tag) -> TagRecordDTO:

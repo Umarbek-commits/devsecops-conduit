@@ -2,11 +2,12 @@ import { Link, redirect } from "react-router";
 
 import type { Route } from "../+types/root";
 import { inputsSchema, type Inputs } from "~/libs/schemas/register";
-import fetchClient from "~/libs/api";
 import { useFetcher } from "~/hooks/useFetcher";
 import type { components } from "~/consts/schema";
 import { checkIsLogin, commitSession, getSession } from "~/session.server";
 import { ErrorMessage } from "~/components/ErrorMessage";
+import { getApiErrorMessages } from "~/libs/api/errors";
+import { apiClientContext } from "~/context/apiClient";
 
 export async function loader({ request }: Route.LoaderArgs) {
   if (await checkIsLogin(request)) {
@@ -14,7 +15,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   const data = Object.fromEntries(await request.formData());
   const result = inputsSchema.safeParse(data);
 
@@ -24,27 +25,34 @@ export async function action({ request }: Route.ActionArgs) {
       fieldErrors: result.error.flatten().fieldErrors,
     };
   }
-  const res = await fetchClient.POST("/users", {
-    body: {
-      user: result.data,
-    },
-  });
+  try {
+    const res = await context.get(apiClientContext).POST("/users", {
+      body: {
+        user: result.data,
+      },
+    });
 
-  if (res.error) {
+    if (res.error) {
+      return {
+        formState: data,
+        errors: getApiErrorMessages(res.error),
+      };
+    }
+
+    const session = await getSession(request.headers.get("Cookie"));
+    session.set("token", res.data?.user.token!);
+
+    return redirect("/", {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    });
+  } catch (error) {
     return {
       formState: data,
-      errors: res.error.errors.body,
+      errors: getApiErrorMessages(error),
     };
   }
-
-  const session = await getSession(request.headers.get("Cookie"));
-  session.set("token", res.data?.user.token!);
-
-  return redirect("/", {
-    headers: {
-      "Set-Cookie": await commitSession(session),
-    },
-  });
 }
 
 export default () => {

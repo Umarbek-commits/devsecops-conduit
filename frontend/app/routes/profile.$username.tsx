@@ -1,20 +1,22 @@
 import { Link, Outlet, useLoaderData } from "react-router";
 import type { Route } from "../+types/root";
-import fetchClient from "~/libs/api";
+import { apiClientContext } from "~/context/apiClient";
 import { Avatar } from "../components/Avatar/index";
 import { useUser } from "~/hooks/useUser";
 import { FollowButton } from "~/components/FollowButton";
 import { Tabs } from "~/components/Tabs";
+import { throwApiError } from "~/libs/api/errors";
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, context }: Route.LoaderArgs) {
   const username = params.username;
-  const res = await fetchClient.GET("/profiles/{username}", {
+  const res = await context.get(apiClientContext).GET("/profiles/{username}", {
     params: {
       path: {
         username: username!,
       },
     },
   });
+  if (res.error) throwApiError(res.error);
   return {
     profile: res.data?.profile,
   };
@@ -47,7 +49,7 @@ export default () => {
               {user?.username !== profile?.username && profile ? (
                 <FollowButton profile={profile} />
               ) : null}
-              {user ? (
+              {user?.username === profile?.username ? (
                 <>
                   <Link
                     to="/settings"

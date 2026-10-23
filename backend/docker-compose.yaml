@@ -2,13 +2,19 @@ services:
   api:
     build: .
     container_name: conduit-api
-    command: uvicorn conduit.app:app --host 0.0.0.0 --port 8080
     environment:
       POSTGRES_HOST: postgres
+      UVICORN_PORT: "8080"
     env_file:
       - .env
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/api/health-check"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
     volumes:
       - .:/conduit
 

@@ -7,8 +7,9 @@ import { inputsSchema, type Inputs } from "~/libs/schemas/settings";
 import type { components } from "~/consts/schema";
 import { destroySession, getSession } from "~/session.server";
 import { ErrorMessage } from "~/components/ErrorMessage";
-import fetchClient from "~/libs/api";
 import { userContext } from "~/context/user";
+import { apiClientContext } from "~/context/apiClient";
+import { getApiErrorMessages } from "~/libs/api/errors";
 
 export const loader = ({ context }: Route.LoaderArgs) => {
   const user = context.get(userContext);
@@ -16,7 +17,7 @@ export const loader = ({ context }: Route.LoaderArgs) => {
   return { user };
 };
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   let formData = await request.formData();
   const data = Object.fromEntries(formData);
   const { intent, ...updateData } = data;
@@ -41,28 +42,35 @@ export async function action({ request }: Route.ActionArgs) {
         };
       }
 
-      const res = await fetchClient.PUT("/user", {
-        body: {
-          user: omitBy(result.data, (value, key) => {
-            if (key === "password" && !value) {
-              return true;
-            }
-            return false;
-          }) as components["schemas"]["User"],
-        },
-      });
+      try {
+        const res = await context.get(apiClientContext).PUT("/user", {
+          body: {
+            user: omitBy(result.data, (value, key) => {
+              if (key === "password" && !value) {
+                return true;
+              }
+              return false;
+            }) as components["schemas"]["User"],
+          },
+        });
 
-      if (res.error) {
+        if (res.error) {
+          return {
+            errors: getApiErrorMessages(res.error),
+            formState: updateData,
+          };
+        }
+
         return {
-          errors: res.error.errors.body,
+          formState: updateData,
+          errors: [],
+        };
+      } catch (error) {
+        return {
+          errors: getApiErrorMessages(error),
           formState: updateData,
         };
       }
-
-      return {
-        formState: updateData,
-        errors: [],
-      };
     }
     default: {
       throw Error("unknown intent" + intent);
@@ -94,10 +102,10 @@ export default () => {
                     type="text"
                     placeholder="URL of profile picture"
                     name="image"
-                    defaultValue={formState?.image || user?.image}
+                    defaultValue={formState?.image ?? user?.image}
                   />
                 </fieldset>
-                <ErrorMessage errors={fieldErrors?.email} />
+                <ErrorMessage errors={fieldErrors?.image} />
 
                 <fieldset className="form-group">
                   <input
@@ -105,7 +113,7 @@ export default () => {
                     type="text"
                     placeholder="Your Name"
                     name="username"
-                    defaultValue={formState?.username || user?.username}
+                    defaultValue={formState?.username ?? user?.username}
                   />
                 </fieldset>
                 <ErrorMessage errors={fieldErrors?.username} />
@@ -116,7 +124,7 @@ export default () => {
                     rows={8}
                     placeholder="Short bio about you"
                     name="bio"
-                    defaultValue={formState?.bio || user?.bio}
+                    defaultValue={formState?.bio ?? user?.bio}
                   ></textarea>
                 </fieldset>
                 <ErrorMessage errors={fieldErrors?.bio} />
@@ -127,7 +135,7 @@ export default () => {
                     type="text"
                     placeholder="Email"
                     name="email"
-                    defaultValue={formState?.email || user?.email}
+                    defaultValue={formState?.email ?? user?.email}
                   />
                 </fieldset>
                 <ErrorMessage errors={fieldErrors?.email} />

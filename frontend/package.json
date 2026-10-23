@@ -8,7 +8,8 @@
     "dev": "cross-env NODE_ENV=development node server.js",
     "start": "node server.js",
     "typecheck": "react-router typegen && tsc",
-    "openapi": "npx openapi-typescript ./openapi/schema.yml -o ./app/consts/schema.d.ts"
+    "openapi": "npx openapi-typescript ./openapi/schema.yml -o ./app/consts/schema.d.ts",
+    "test:api-client": "node --experimental-strip-types tests/api-client.test.mjs"
   },
   "dependencies": {
     "@react-router/express": "^7.9.6",
@@ -20,6 +21,7 @@
     "clsx": "^2.1.1",
     "compression": "^1.8.1",
     "dayjs": "^1.11.19",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "isbot": "^5.1.31",
     "lodash-es": "^4.17.21",
@@ -30,8 +32,7 @@
     "react-router": "^7.9.2",
     "remark": "^15.0.1",
     "remark-html": "^16.0.1",
-    "zod": "^4.1.13",
-    "dotenv": "^17.2.3"
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@react-router/dev": "^7.9.2",
@@ -42,6 +43,7 @@
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "cross-env": "^10.1.0",
+    "openapi-typescript": "^7.13.0",
     "tailwindcss": "^4.1.13",
     "typescript": "^5.9.2",
     "vite": "^7.1.7",

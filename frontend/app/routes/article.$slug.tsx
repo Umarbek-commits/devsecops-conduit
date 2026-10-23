@@ -2,14 +2,15 @@ import dayjs from "dayjs";
 import { remark } from "remark";
 import html from "remark-html";
 
-import fetchClient from "~/libs/api";
+import { apiClientContext } from "~/context/apiClient";
 import type { Route } from "./+types/article.$slug";
 import { useLoaderData } from "react-router";
 import ArticleMeta from "~/components/ArticleDetail/ArticleMeta";
 import Comments from "~/components/ArticleDetail/Comments";
 import { CommentForm } from "~/components/ArticleDetail/CommentForm";
+import { throwApiError } from "~/libs/api/errors";
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, context }: Route.LoaderArgs) {
   const slug = params.slug;
 
   if (!slug) {
@@ -19,14 +20,14 @@ export async function loader({ params }: Route.LoaderArgs) {
   }
 
   const [res, commentsRes] = await Promise.all([
-    fetchClient.GET("/articles/{slug}", {
+    context.get(apiClientContext).GET("/articles/{slug}", {
       params: {
         path: {
           slug,
         },
       },
     }),
-    fetchClient.GET("/articles/{slug}/comments", {
+    context.get(apiClientContext).GET("/articles/{slug}/comments", {
       params: {
         path: {
           slug,
@@ -34,6 +35,8 @@ export async function loader({ params }: Route.LoaderArgs) {
       },
     }),
   ]);
+  if (res.error) throwApiError(res.error);
+  if (commentsRes.error) throwApiError(commentsRes.error);
 
   const article = res.data?.article;
   const comments = commentsRes.data?.comments;
@@ -48,66 +51,6 @@ export async function loader({ params }: Route.LoaderArgs) {
     contentHtml,
   };
 }
-
-// export async function action({ request, params }: Route.ActionArgs) {
-//   let formData = await request.formData();
-//   const slug = params.slug;
-//   const data = Object.fromEntries(formData);
-//   const { tagList, ...updateData } = data as Omit<
-//     components["schemas"]["NewArticle"],
-//     "tagList"
-//   > & {
-//     tagList: string;
-//   };
-//   const result = inputsSchema.safeParse(
-//     omitBy(
-//       {
-//         ...updateData,
-//         tagList: tagList?.split(",").filter(Boolean) || "",
-//       },
-//       (value) => {
-//         if (!value) {
-//           return true;
-//         }
-//         return false;
-//       }
-//     )
-//   );
-
-//   if (!result.success) {
-//     return {
-//       fieldErrors: result.error.flatten().fieldErrors,
-//       formState: updateData,
-//       errors: undefined,
-//     };
-//   }
-
-//   const fetchParams = {
-//     body: {
-//       article: result.data,
-//     },
-//   };
-
-//   const res = await (slug
-//     ? fetchClient.PUT("/articles/{slug}", {
-//         ...fetchParams,
-//         params: {
-//           path: {
-//             slug,
-//           },
-//         },
-//       })
-//     : fetchClient.POST("/articles", fetchParams));
-//   console.log(res, "res");
-//   if (res.error) {
-//     return {
-//       errors: res.error.errors.body,
-//       formState: updateData,
-//     };
-//   }
-
-//   return redirect(`/article/${res.data?.article.slug}`);
-// }
 
 export default () => {
   const { article, comments, contentHtml } = useLoaderData<typeof loader>();

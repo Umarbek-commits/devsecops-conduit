@@ -1,6 +1,6 @@
 import { createCookieSessionStorage, type ActionFunctionArgs } from "react-router";
 import { COOKIE_KEY } from "./consts";
-import fetchClient from "./libs/api";
+import { createApiClient } from "./libs/api";
 
 type SessionData = {
   token: string;
@@ -22,7 +22,7 @@ const { getSession, commitSession, destroySession } =
         path: "/",
         sameSite: "lax",
         secrets: [process.env.SESSION_SECRET!],
-        secure: true,
+        secure: process.env.NODE_ENV !== "development",
       },
     },
   );
@@ -47,7 +47,7 @@ export const getSessionToken = async (request: ActionFunctionArgs['request']) =>
 
 
 export const getUser = async(request: ActionFunctionArgs['request']) => {
-  const user = await fetchClient.GET("/user");
+  const user = await createApiClient(await getSessionToken(request)).GET("/user");
 
   return user
 }

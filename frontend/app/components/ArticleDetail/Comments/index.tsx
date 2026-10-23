@@ -9,11 +9,11 @@ export default ({
 }: {
   comments?: components["schemas"]["Comment"][];
 }) => {
+  const currentUser = useUser();
+
   if (!comments?.length) {
     return null;
   }
-
-  const currentUser = useUser();
 
   return (
     <>
@@ -41,7 +41,7 @@ export default ({
                 {comment.author.username}
               </a>
               <span className="date-posted">
-                {dayjs(comment.createdAt).format("MMM D")}th
+                {dayjs(comment.createdAt).format("MMM D, YYYY")}
               </span>
               {currentUser?.username === comment.author.username ? (
                 <DeleteComment id={comment.id} />

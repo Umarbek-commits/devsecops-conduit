@@ -100,3 +100,4 @@ class UpdateArticleDTO:
     title: str | None
     description: str | None
     body: str | None
+    tags: list[str] | None = None

@@ -14,3 +14,6 @@ class IArticleTagRepository(abc.ABC):
 
     @abc.abstractmethod
     async def list(self, session: Any, article_id: int) -> list[TagRecordDTO]: ...
+
+    @abc.abstractmethod
+    async def delete_all(self, session: Any, article_id: int) -> None: ...

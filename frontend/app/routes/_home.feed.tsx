@@ -1,9 +1,10 @@
 import { useLoaderData } from "react-router";
-import fetchClient from "~/libs/api";
+import { apiClientContext } from "~/context/apiClient";
 import Articles from "~/components/Articles";
 import type { Route } from "./+types/_home._index";
+import { throwApiError } from "~/libs/api/errors";
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   const url = new URL(request.url);
 
   const searchParams = Object.fromEntries(url.searchParams.entries()) as {
@@ -16,7 +17,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const size = searchParams?.size || 10;
   const tag = searchParams?.tag || "";
 
-  const res = await fetchClient.GET("/articles/feed", {
+  const res = await context.get(apiClientContext).GET("/articles/feed", {
     params: {
       query: {
         limit: Number(size),
@@ -24,6 +25,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       },
     },
   });
+  if (res.error) throwApiError(res.error);
 
   return {
     ...res.data,

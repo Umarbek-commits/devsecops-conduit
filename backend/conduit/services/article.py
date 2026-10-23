@@ -108,6 +108,16 @@ class ArticleService(IArticleService):
         article = await self._article_repo.update_by_slug(
             session=session, slug=slug, update_item=article_to_update
         )
+        if article_to_update.tags is not None:
+            await self._article_tag_repo.delete_all(
+                session=session, article_id=article.id
+            )
+            if article_to_update.tags:
+                await self._article_tag_repo.add_many(
+                    session=session,
+                    article_id=article.id,
+                    tags=article_to_update.tags,
+                )
         profile = await self._profile_service.get_profile_by_user_id(
             session=session, user_id=article.author_id, current_user=current_user
         )

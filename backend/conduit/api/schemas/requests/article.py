@@ -25,6 +25,7 @@ class UpdateArticleData(BaseModel):
     title: str | None = Field(None)
     description: str | None = Field(None)
     body: str | None = Field(None)
+    tags: list[str] | None = Field(None, alias="tagList")
 
 
 class UpdateArticleRequest(BaseModel):
@@ -35,6 +36,7 @@ class UpdateArticleRequest(BaseModel):
             title=self.article.title,
             description=self.article.description,
             body=self.article.body,
+            tags=self.article.tags,
         )
 
 

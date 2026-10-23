@@ -328,6 +328,7 @@ export interface components {
             title?: string;
             description?: string;
             body?: string;
+            tagList?: string[];
         };
         Comment: {
             id: number;
@@ -342,8 +343,15 @@ export interface components {
             body: string;
         };
         GenericErrorModel: {
-            errors: {
-                body: string[];
+            /** @example error */
+            status: string;
+            status_code: number;
+            type: string;
+            message: string;
+            errors?: {
+                [key: string]: string[] | {
+                    [key: string]: string[];
+                };
             };
         };
     };
@@ -546,7 +554,7 @@ export interface operations {
         };
         requestBody: components["requestBodies"]["NewUserRequest"];
         responses: {
-            201: components["responses"]["UserResponse"];
+            200: components["responses"]["UserResponse"];
             422: components["responses"]["GenericError"];
         };
     };
@@ -682,7 +690,7 @@ export interface operations {
         };
         requestBody: components["requestBodies"]["NewArticleRequest"];
         responses: {
-            201: components["responses"]["SingleArticleResponse"];
+            200: components["responses"]["SingleArticleResponse"];
             401: components["responses"]["Unauthorized"];
             422: components["responses"]["GenericError"];
         };

@@ -1,9 +1,10 @@
 import { redirect, type ActionFunctionArgs } from "react-router";
-import fetchClient from "~/libs/api";
 import { checkIsLogin } from "~/session.server";
+import { apiClientContext } from "~/context/apiClient";
+import { getApiErrorMessages } from "~/libs/api/errors";
 
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
   if (!await checkIsLogin(request)) {
     return redirect("/login");
   }
@@ -22,11 +23,17 @@ export async function action({ request }: ActionFunctionArgs) {
     },
   };
 
-  await (action === "favorite"
-    ? fetchClient.POST("/articles/{slug}/favorite", params)
-    : fetchClient.DELETE("/articles/{slug}/favorite", params));
+  try {
+    const result = await (action === "favorite"
+      ? context.get(apiClientContext).POST("/articles/{slug}/favorite", params)
+      : context.get(apiClientContext).DELETE("/articles/{slug}/favorite", params));
 
-  return true;
+    if (result.error) return { errors: getApiErrorMessages(result.error) };
+
+    return { errors: [] };
+  } catch (error) {
+    return { errors: getApiErrorMessages(error) };
+  }
 }
 
 export { loader } from "~/libs/actions"

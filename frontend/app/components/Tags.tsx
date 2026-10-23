@@ -22,7 +22,8 @@ export default ({ tags, link }: { tags?: string[]; link?: boolean }) => {
                 )}
                 onClick={() => {
                   if (link) {
-                    navigate(`${pathname}?tag=${tag}`);
+                    const searchParams = new URLSearchParams({ tag });
+                    navigate(`${pathname}?${searchParams.toString()}`);
                   }
                 }}
               >

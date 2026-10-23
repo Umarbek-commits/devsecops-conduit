@@ -1,7 +1,11 @@
 from sqlalchemy.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from conduit.core.exceptions import CommentCreateException, CommentPermissionException
+from conduit.core.exceptions import (
+    CommentCreateException,
+    CommentNotFoundException,
+    CommentPermissionException,
+)
 from conduit.dtos.domain.comment import CommentDTO, CommentsListDTO, CreateCommentDTO
 from conduit.dtos.domain.profile import ProfileDTO
 from conduit.dtos.domain.user import UserDTO
@@ -68,9 +72,11 @@ class CommentService(ICommentService):
         self, session: AsyncSession, slug: str, comment_id: int, current_user: UserDTO
     ) -> None:
         # Check if article exists before deleting the comment.
-        await self._article_repo.get_by_slug(session=session, slug=slug)
+        article = await self._article_repo.get_by_slug(session=session, slug=slug)
 
         comment = await self._comment_repo.get(session=session, comment_id=comment_id)
+        if comment.article_id != article.id:
+            raise CommentNotFoundException()
         if comment.author_id != current_user.id:
             raise CommentPermissionException()
 

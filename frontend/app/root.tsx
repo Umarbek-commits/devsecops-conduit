@@ -11,22 +11,25 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { Nav } from "~/components/NavHeader";
 import { Footer } from "~/components/Footer";
-import fetchClient from "~/libs/api";
+import { createApiClient } from "~/libs/api";
 import { destroySession, getSession } from "./session.server";
 import { userContext } from "./context/user";
+import { apiClientContext } from "./context/apiClient";
 
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ request, context }, next) => {
 
     const session = await getSession(request.headers.get("Cookie"));
 
+    const apiClient = createApiClient(session.get("token"));
+    context.set(apiClientContext, apiClient);
+
     if (session.has("token")) {
-      fetchClient.token = session.get("token") || "";
       try {
-        const user = await fetchClient.GET("/user");
-        await context.set(userContext, user.data?.user!);
+        const user = await apiClient.GET("/user");
+        await context.set(userContext, user.data?.user ?? null);
       } catch (error) {
-        fetchClient.token = undefined;
+        await context.set(userContext, null);
       }
     }
 
@@ -50,7 +53,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     return new Response(JSON.stringify({ user: undefined }), {
       status: 200,
       headers: {
-        "Content-Type": "applicaiton/json",
+        "Content-Type": "application/json",
         "Set-Cookie": await destroySession(session),
       },
     });
