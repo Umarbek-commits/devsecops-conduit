@@ -24,12 +24,12 @@ export default function ArticleMeta({
         <Avatar src={author?.image} />
       </Link>
       <div className="info">
-        <a href={`/profile/${author?.username}`} className="author">
+        <Link to={`/profile/${author?.username}`} className="author">
           {author?.username}
-        </a>
-        <span className="date">
+        </Link>
+        <time className="date" dateTime={article?.createdAt}>
           {article?.createdAt ? dayjs(article.createdAt).format("MMMM D, YYYY") : ""}
-        </span>
+        </time>
       </div>
       {!isAuthor ? <FollowButton profile={author!} /> : null}
       &nbsp;&nbsp;
@@ -40,11 +40,12 @@ export default function ArticleMeta({
       />
       {isAuthor ? (
         <>
-          <button className="btn btn-sm btn-outline-secondary">
-            <Link to={`/editor/${article?.slug}`}>
-              <i className="ion-edit"></i> Edit Article
-            </Link>
-          </button>
+          <Link
+            className="btn btn-sm btn-outline-secondary"
+            to={`/editor/${article?.slug}`}
+          >
+            <i aria-hidden="true" className="ion-edit"></i> Edit Article
+          </Link>
           <DeleteArticle />
         </>
       ) : null}

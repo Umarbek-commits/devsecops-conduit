@@ -3,6 +3,7 @@ import { useFetcher as useFetcherInner } from "react-router";
 
 export type TypeFetcherData<T, R> = {
   errors?: string[];
+  success?: string;
   fieldErrors: { [P in keyof T]: string[] };
   formState: T;
   data: R

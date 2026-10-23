@@ -41,7 +41,7 @@ export const Nav = () => {
   });
 
   return (
-    <nav className="navbar navbar-light">
+    <nav className="navbar navbar-light" aria-label="Main navigation">
       <div className="container">
         <Link className="navbar-brand" to="/">
           conduit

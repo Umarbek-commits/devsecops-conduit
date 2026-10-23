@@ -21,6 +21,7 @@ export const Menu = ({
                 "nav-link",
                 pathname === item.path ? "active" : ""
               )}
+              aria-current={pathname === item.path ? "page" : undefined}
               to={item.path}
             >
               {item.children}

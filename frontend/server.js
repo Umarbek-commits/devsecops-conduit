@@ -1,3 +1,4 @@
+import "dotenv/config";
 import compression from "compression";
 import express from "express";
 import morgan from "morgan";
@@ -6,6 +7,12 @@ import morgan from "morgan";
 const BUILD_PATH = "./build/server/index.js";
 const DEVELOPMENT = process.env.NODE_ENV === "development";
 const PORT = Number.parseInt(process.env.PORT || "3000");
+
+if (!process.env.SESSION_SECRET?.trim()) {
+  throw new Error(
+    "SESSION_SECRET must be set to a non-empty value before the server starts.",
+  );
+}
 
 const app = express();
 

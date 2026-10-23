@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import { useFetcher } from "~/hooks/useFetcher";
 import { ErrorMessage } from "~/components/ErrorMessage";
+import { SuccessMessage } from "~/components/SuccessMessage";
 
 export const FavoriteButton = ({
   count = 0,
@@ -32,6 +33,7 @@ export const FavoriteButton = ({
         <button
           disabled={isLoading}
           type="submit"
+          aria-pressed={Boolean(favorite)}
           className="btn btn-sm btn-outline-primary action-btn"
         >
           <i className={clsx("ion-heart")}></i> {text}{" "}
@@ -39,6 +41,15 @@ export const FavoriteButton = ({
         </button>
       </fetcher.Form>
       <ErrorMessage errors={errors} />
+      <SuccessMessage
+        message={
+          fetcher.state === "idle" && fetcher.data?.success === "favorite"
+            ? "Added to favorites."
+            : fetcher.state === "idle" && fetcher.data?.success === "unfavorite"
+              ? "Removed from favorites."
+              : undefined
+        }
+      />
     </>
   );
 };

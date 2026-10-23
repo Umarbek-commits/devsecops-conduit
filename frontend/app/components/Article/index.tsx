@@ -16,16 +16,16 @@ export const Article = ({
   return (
     <div className="article-preview">
       <div className="article-meta">
-        <a href={profileHref}>
-          <Avatar src={article.author.image} />
-        </a>
+        <Link to={profileHref} aria-label={`View ${article.author.username}'s profile`}>
+          <Avatar src={article.author.image} alt="" />
+        </Link>
         <div className="info">
-          <a href={profileHref} className="author">
+          <Link to={profileHref} className="author">
             {article.author.username}
-          </a>
-          <span className="date">
-            {dayjs(article.createdAt).format("MMMM D")}th
-          </span>
+          </Link>
+          <time className="date" dateTime={article.createdAt}>
+            {dayjs(article.createdAt).format("MMM D, YYYY")}
+          </time>
         </div>
         <FavoriteButton
           className="pull-xs-right"

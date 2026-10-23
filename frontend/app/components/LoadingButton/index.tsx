@@ -15,6 +15,7 @@ export const LoadingButton = ({
       {...rest}
       type={type}
       disabled={loading || rest.disabled}
+      aria-busy={loading || undefined}
     >
       {loading ? "Loading" : children}
     </button>

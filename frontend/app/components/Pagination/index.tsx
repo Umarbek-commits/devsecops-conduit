@@ -15,25 +15,28 @@ export const Pagination = (props: {
   }
 
   return (
-    <ul className="pagination">
-      {Array.from({ length: totalPages }).map((_, i) => {
-        const currentPage = i + 1;
-        return (
-          <li
-            className={clsx("page-item", {
-              active: currentPage === Number(page),
-            })}
-            key={currentPage + ""}
-          >
-            <Link
-              className="page-link"
-              to={buildPaginationHref(pathname, search, currentPage)}
+    <nav aria-label="Article pages">
+      <ul className="pagination">
+        {Array.from({ length: totalPages }).map((_, i) => {
+          const currentPage = i + 1;
+          return (
+            <li
+              className={clsx("page-item", {
+                active: currentPage === Number(page),
+              })}
+              key={currentPage}
             >
-              {currentPage}
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
+              <Link
+                className="page-link"
+                to={buildPaginationHref(pathname, search, currentPage)}
+                aria-current={currentPage === Number(page) ? "page" : undefined}
+              >
+                {currentPage}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 };

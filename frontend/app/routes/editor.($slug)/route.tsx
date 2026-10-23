@@ -140,26 +140,41 @@ export default () => {
       <div className="container page">
         <div className="row">
           <div className="col-md-10 offset-md-1 col-xs-12">
+            <header className="editor-heading">
+              <p className="eyebrow">Your writing</p>
+              <h1>{slug ? "Edit your article" : "Create an article"}</h1>
+              <p>Write in Markdown. Add tags to help readers find your story.</p>
+            </header>
             <ErrorMessage errors={errors} />
 
             <fetcher.Form method="post">
               <fieldset>
                 <fieldset className="form-group">
+                  <label className="sr-only" htmlFor="article-title">
+                    Article title
+                  </label>
                   <input
+                    id="article-title"
                     type="text"
                     className="form-control form-control-lg"
                     placeholder="Article Title"
                     name="title"
+                    required
                     defaultValue={formState?.title || article?.title}
                   />
                 </fieldset>
                 <ErrorMessage errors={fieldErrors?.title} />
                 <fieldset className="form-group">
+                  <label className="sr-only" htmlFor="article-description">
+                    Article description
+                  </label>
                   <input
+                    id="article-description"
                     type="text"
                     className="form-control"
                     placeholder="What's this article about?"
                     name="description"
+                    required
                     defaultValue={
                       formState?.description || article?.description
                     }
@@ -167,18 +182,27 @@ export default () => {
                 </fieldset>
                 <ErrorMessage errors={fieldErrors?.description} />
                 <fieldset className="form-group">
+                  <label className="sr-only" htmlFor="article-body">
+                    Article body in Markdown
+                  </label>
                   <textarea
+                    id="article-body"
                     className="form-control"
                     rows={8}
                     placeholder="Write your article (in markdown)"
                     name="body"
+                    required
                     defaultValue={formState?.body || article?.body}
                   ></textarea>
                 </fieldset>
                 <ErrorMessage errors={fieldErrors?.body} />
 
                 <fieldset className="form-group">
+                  <label className="sr-only" htmlFor="article-tags">
+                    Add a tag and press Enter
+                  </label>
                   <input
+                    id="article-tags"
                     ref={tagInputRef}
                     type="text"
                     className="form-control"
@@ -210,12 +234,17 @@ export default () => {
                     <div className="tag-list">
                       {tagList.map((tag) => (
                         <span key={tag} className="tag-default tag-pill">
-                          <i
-                            className="ion-close-round"
+                          <button
+                            type="button"
+                            aria-label={`Remove ${tag} tag`}
                             onClick={() => {
-                              setTagList((list) => list.filter((value) => value !== tag));
+                              setTagList((list) =>
+                                list.filter((value) => value !== tag),
+                              );
                             }}
-                          ></i>
+                          >
+                            <span aria-hidden="true">×</span>
+                          </button>
                           {tag}
                         </span>
                       ))}
@@ -224,7 +253,9 @@ export default () => {
                 </fieldset>
                 <button
                   type="submit"
+                  disabled={isLoading}
                   className="btn btn-lg pull-xs-right btn-primary"
+                  aria-busy={isLoading}
                 >
                   {isLoading
                     ? "loading"

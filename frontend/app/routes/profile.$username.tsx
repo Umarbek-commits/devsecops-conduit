@@ -43,9 +43,13 @@ export default () => {
         <div className="container">
           <div className="row">
             <div className="col-xs-12 col-md-10 offset-md-1">
-              <Avatar className="user-img" src={profile?.image} />
+              <Avatar
+                className="user-img"
+                src={profile?.image}
+                alt={`${profile?.username ?? "User"} avatar`}
+              />
               <h4>{profile?.username}</h4>
-              <p>{profile?.bio || "There are noting left on the bio"}</p>
+              <p>{profile?.bio || "No bio added yet."}</p>
               {user?.username !== profile?.username && profile ? (
                 <FollowButton profile={profile} />
               ) : null}

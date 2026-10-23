@@ -81,12 +81,6 @@ export default () => {
           </div>
         </div>
 
-        <hr />
-
-        <div className="article-actions">
-          <ArticleMeta article={article!} />
-        </div>
-
         <div className="row">
           <div className="col-xs-12 col-md-8 offset-md-2">
             <CommentForm />
